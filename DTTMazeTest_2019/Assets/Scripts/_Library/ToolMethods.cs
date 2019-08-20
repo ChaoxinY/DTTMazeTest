@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public static class ToolMethods
@@ -10,6 +11,14 @@ public static class ToolMethods
 		return processedNumber;
 	}
 
+	public static int GetIntValueFromInputField(InputField inputField)
+	{
+		if(int.TryParse(inputField.text, out int value))
+		{
+			value = int.Parse(inputField.text);
+		}
+		return value;
+	}
 	//Width for how many cells are on the row
 	//y for how deep in the column
 	//x for the exact position on the row
@@ -19,15 +28,16 @@ public static class ToolMethods
 		return indexCell;
 	}
 
-	public static Vector3 CalculateCenterpoint(float width, float height)
+	public static Vector3 CalculateTransformCenterpoint(Vector3 position)
 	{
-		Vector3 centerPointPosition = new Vector3(width / 2f - 0.5f, 0, height / 2f - 0.2f);
+		Vector3 centerPointPosition = new Vector3(position.x / 2f, position.y, position.z / 2f);
 		return centerPointPosition;
 	}
 
-	public static void CameraOverViewFocusOnGameObject(Camera camera, Vector3 focusPosition, float objectWidth)
+	public static void CameraFocusOnGameObject(Camera camera, Vector3 focusPosition, Vector2 objectDimension)
 	{
-		camera.transform.position = new Vector3(focusPosition.x, focusPosition.y + objectWidth + 3f, focusPosition.z);
+		float highestMeasureMentValue = objectDimension.x > objectDimension.y ? objectDimension.x : objectDimension.y;
+		camera.transform.position = new Vector3(focusPosition.x, focusPosition.y + highestMeasureMentValue + 5f, focusPosition.z);
 	}
 
 }

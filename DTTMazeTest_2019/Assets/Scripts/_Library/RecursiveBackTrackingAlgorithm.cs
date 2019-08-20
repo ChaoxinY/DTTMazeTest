@@ -15,7 +15,6 @@ public static class Directions
 		new Vector2(-2, 0),new Vector2(2, 0)  };
 }
 
-
 public abstract class BaseCell
 {
 	protected Vector2 position;
@@ -93,11 +92,11 @@ public class RecursiveBacktrackingCell : BaseCell
 
 public static partial class MazeCalculatingAlgorithms
 {
-	public async static Task<List<Vector2>> CalculateRecursiveBacktrackingMaze(Vector2 mazeDimensions)
+	public async static Task<List<Vector2Int>> CalculateRecursiveBacktrackingMaze(Vector2Int mazeDimensions)
 	{
 		List<RecursiveBacktrackingCell> allCells = new List<RecursiveBacktrackingCell>();
 		List<RecursiveBacktrackingCell> pathCells = new List<RecursiveBacktrackingCell>();
-		FillCellLists((int)mazeDimensions.x, (int)mazeDimensions.y, allCells, pathCells);
+		FillCellLists(mazeDimensions.x, mazeDimensions.y, allCells, pathCells);
 
 		//Make the initial cell the current cell and mark it as visited
 		RecursiveBacktrackingCell initialCell = pathCells[(UnityEngine.Random.Range(0, (int)mazeDimensions.y))];
@@ -137,15 +136,14 @@ public static partial class MazeCalculatingAlgorithms
 				pathCells.Remove(reviveCell);
 				currentCell.isVisited = true;
 			}
-			Debug.Log("Running");
 			await Task.Delay(1);
 		}
-		List<Vector2> positions = new List<Vector2>();
+		List<Vector2Int> positions = new List<Vector2Int>();
 		foreach(RecursiveBacktrackingCell cellToSpawn in allCells)
 		{
 			if(cellToSpawn.isWall)
 			{
-				positions.Add(cellToSpawn.Position);
+				positions.Add(new Vector2Int((int)cellToSpawn.Position.x,(int)cellToSpawn.Position.y));
 			}
 		}
 		return positions;
