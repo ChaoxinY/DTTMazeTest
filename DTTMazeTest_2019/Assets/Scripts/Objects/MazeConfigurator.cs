@@ -19,7 +19,7 @@ public enum MazeSpawnAlgorithmType
 	BackTrackingRecursive = 0
 }
 
-public class MazeConfigurator : MonoBehaviour, IEventPublisher
+public class MazeConfigurator : MonoBehaviour, IEventPublisher, IEventHandler
 {
 	#region Variables
 	public event EventHandler<SpawnMazeEventArgs> SpawnMazeEvent;
@@ -30,19 +30,48 @@ public class MazeConfigurator : MonoBehaviour, IEventPublisher
 	[SerializeField]
 	private Dropdown mazeSpawnAlgorithmSelector = default;
 	private Vector2Int mazeDimensions;
+	private bool generationFinished;
 	private MazeSpawnAlgorithmType mazeSpawnAlgorithmType;
 	#endregion
 
 	#region Initialization
+	private void Awake()
+	{
+		StaticReferences.EventSubject.PublisherSubscribed += SubscribeEvent;
+	}
+
 	private void Start()
 	{
 		StaticReferences.EventSubject.Subscribe(this);
 		mazeSpawnAlgorithmType = MazeSpawnAlgorithmType.BackTrackingRecursive;
 		SetUpmazeSpawnerDropdown();
+		generationFinished = true;
 	}
 	#endregion
 
 	#region EventSystem Setup
+	public void SubscribeEvent(object eventPublisher, PublisherSubscribedEventArgs publisherSubscribedEventArgs)
+	{
+		//SubScribe to the targeted eventPublisher with the same type
+		if(publisherSubscribedEventArgs.Publisher.GetType() == typeof(MazeSpawner))
+		{
+			MazeSpawner mazeSpawner = (MazeSpawner)publisherSubscribedEventArgs.Publisher;
+			mazeSpawner.MazeGenerationEnded +=  OnMazeGenerationFinished;
+		}
+	}
+
+	public void UnSubScribeEvent()
+	{
+		StaticReferences.EventSubject.PublisherSubscribed -= SubscribeEvent;
+		foreach(IEventPublisher eventPublisher in StaticReferences.EventSubject.EventPublishers)
+		{
+			if(eventPublisher.GetType() == typeof(MazeSpawner))
+			{
+				MazeSpawner mazeSpawner = (MazeSpawner)eventPublisher;
+				mazeSpawner.MazeGenerationStarted -= OnMazeGenerationFinished;
+			}
+		}
+	}
 	public void UnSubscribeFromSubject()
 	{
 		StaticReferences.EventSubject.UnSubscribe(this);
@@ -50,6 +79,7 @@ public class MazeConfigurator : MonoBehaviour, IEventPublisher
 
 	private void OnDestroy()
 	{
+		UnSubScribeEvent();
 		UnSubscribeFromSubject();
 	}
 	#endregion
@@ -57,7 +87,11 @@ public class MazeConfigurator : MonoBehaviour, IEventPublisher
 	#region Functionality
 	public void SpawnMaze()
 	{
-		SpawnMazeEvent?.Invoke(this, new SpawnMazeEventArgs(mazeDimensions, mazeSpawnAlgorithmType));
+		if(generationFinished)
+		{
+			SpawnMazeEvent?.Invoke(this, new SpawnMazeEventArgs(mazeDimensions, mazeSpawnAlgorithmType));
+			generationFinished = false;
+		}
 	}
 	//set maze value with methods here
 	public void SetMazeWidth()
@@ -87,6 +121,11 @@ public class MazeConfigurator : MonoBehaviour, IEventPublisher
 	private void SetCurrentMazeCalculatingAlgorithm(int value)
 	{
 		mazeSpawnAlgorithmType = (MazeSpawnAlgorithmType)value;
+	}
+
+	private void OnMazeGenerationFinished(object sender, EventArgs eventArgs)
+	{
+		generationFinished = true;
 	}
 }
 #endregion

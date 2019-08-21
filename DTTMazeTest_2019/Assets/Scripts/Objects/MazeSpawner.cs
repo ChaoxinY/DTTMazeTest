@@ -7,6 +7,7 @@ using System.Collections.Generic;
 public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 {
 	#region Variables
+	//Using delegate to allow switching between different generation algorithms.
 	public Func<Vector2Int, Task<List<Vector2Int>>> CalculateMaze;
 	public event EventHandler MazeGenerationStarted;
 	public event EventHandler MazeGenerationEnded;
@@ -15,7 +16,6 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 	private const string FLOOR_MATERIAL_PATH = "SurfaceMaterials/Carpet";
 	private const string MAZE_SPAWNER_NAME = "MazeSpawnPoint";
 	private GameObject mazeSpawnPoint;
-	private bool isMazeGenerating;
 	#endregion
 
 	#region Initialization
@@ -72,9 +72,6 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 	#region Functionality
 	private async void SpawnMaze(object eventPublisher, SpawnMazeEventArgs spawnMazeEventArgs)
 	{
-		if(!isMazeGenerating)
-		{
-			isMazeGenerating = !isMazeGenerating;
 			MazeGenerationStarted?.Invoke(this, new EventArgs());
 			//SetUpMazeSpawnPoint
 			SetUpMazeSpawnPoint();
@@ -84,7 +81,6 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 			DetermineCalculationAlgortihm(spawnMazeEventArgs.MazeSpawnAlgorithmType);
 			List<Vector2Int> calculatedCellPositions = await CalculateMaze(spawnMazeEventArgs.MazeDimensions);
 			StartCoroutine(SpawnCells(calculatedCellPositions, mazeSpawnPoint.transform));
-		}
 	}
 
 	private void SetUpMazeSpawnPoint()
@@ -109,7 +105,6 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 			cube.transform.SetParent(parent);
 			yield return new WaitForFixedUpdate();
 		}
-		isMazeGenerating = !isMazeGenerating;
 		MazeGenerationEnded?.Invoke(this, new EventArgs());
 	}
 
