@@ -20,10 +20,10 @@ public class CameraUpdater: MonoBehaviour, IEventHandler
 	public void SubscribeEvent(object eventPublisher, PublisherSubscribedEventArgs publisherSubscribedEventArgs)
 	{
 		//SubScribe to the targeted eventPublisher with the same type
-		if(publisherSubscribedEventArgs.Publisher.GetType() == typeof(MazeConfigurator))
+		if(publisherSubscribedEventArgs.Publisher.GetType() == typeof(MazeSpawner))
 		{
-			MazeConfigurator mazeConfigurator = (MazeConfigurator)publisherSubscribedEventArgs.Publisher;
-			mazeConfigurator.SpawnMazeEvent += UpdateCameraPosition;
+			MazeSpawner mazeSpawner = (MazeSpawner)publisherSubscribedEventArgs.Publisher;
+			mazeSpawner.MazeGenerationEnded += UpdateCameraPosition;
 		}
 	}
 
@@ -33,10 +33,10 @@ public class CameraUpdater: MonoBehaviour, IEventHandler
 
 		foreach(IEventPublisher eventPublisher in StaticReferences.EventSubject.EventPublishers)
 		{
-			if(eventPublisher.GetType() == typeof(MazeConfigurator))
+			if(eventPublisher.GetType() == typeof(MazeSpawner))
 			{
-				MazeConfigurator mazeConfigurator = (MazeConfigurator)eventPublisher;
-				mazeConfigurator.SpawnMazeEvent -= UpdateCameraPosition;
+				MazeSpawner mazeSpawner = (MazeSpawner)eventPublisher;
+				mazeSpawner.MazeGenerationEnded -= UpdateCameraPosition;
 			}
 		}
 	}
@@ -48,10 +48,10 @@ public class CameraUpdater: MonoBehaviour, IEventHandler
 	#endregion
 
 	#region Functionality
-	private void UpdateCameraPosition(object sender, SpawnMazeEventArgs spawnMazeEventArgs)
+	private void UpdateCameraPosition(object sender, MazeGenerationEventArgs mazeGenerationEndedEventArgs)
 	{
-		Vector3 cameraFocusPoint = ToolMethods.CalculateTransformCenterpoint(new Vector3(spawnMazeEventArgs.MazeDimensions.x, mazeSpawnPoint.transform.position.y, spawnMazeEventArgs.MazeDimensions.y));
-		ToolMethods.CameraFocusOnPosition(focusCamera, cameraFocusPoint, spawnMazeEventArgs.MazeDimensions);
+		Vector3 cameraFocusPoint = ToolMethods.CalculateTransformCenterpoint(new Vector3(mazeGenerationEndedEventArgs.MazeDimensions.x, mazeSpawnPoint.transform.position.y, mazeGenerationEndedEventArgs.MazeDimensions.y));
+		ToolMethods.CameraFocusOnPosition(focusCamera, cameraFocusPoint, mazeGenerationEndedEventArgs.MazeDimensions);
 	}
 	#endregion
 }

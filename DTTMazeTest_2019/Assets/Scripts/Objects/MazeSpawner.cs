@@ -1,16 +1,30 @@
 ﻿using UnityEngine;
 using System;
+using System.Linq;
 using System.Collections;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+
+public class MazeGenerationEventArgs : EventArgs
+{
+	public Vector2Int MazeDimensions;
+
+
+	public MazeGenerationEventArgs(Vector2Int mazeDimensions)
+	{
+		MazeDimensions = mazeDimensions;
+	}
+}
+
 
 public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 {
 	#region Variables
 	//Using delegate to allow switching between different generation algorithms.
-	public Func<Vector2Int, Task<List<Vector2Int>>> CalculateMaze;
+	private Func<Vector2Int, Task<List<Vector2Int>>> CalculateMaze;
+	private Action<SpawnMazeEventArgs> SpawnMaze;
 	public event EventHandler MazeGenerationStarted;
-	public event EventHandler MazeGenerationEnded;
+	public event EventHandler<MazeGenerationEventArgs> MazeGenerationEnded;
 
 	private const string CELL_MATERIAL_Path = "SurfaceMaterials/StarFruit";
 	private const string FLOOR_MATERIAL_PATH = "SurfaceMaterials/Carpet";
@@ -38,7 +52,7 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 		if(publisherSubscribedEventArgs.Publisher.GetType() == typeof(MazeConfigurator))
 		{
 			MazeConfigurator mazeConfigurator = (MazeConfigurator)publisherSubscribedEventArgs.Publisher;
-			mazeConfigurator.SpawnMazeEvent += SpawnMaze;
+			mazeConfigurator.SpawnMazeEvent += OnMazeSpawned;
 		}
 	}
 
@@ -51,7 +65,7 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 			if(eventPublisher.GetType() == typeof(MazeConfigurator))
 			{
 				MazeConfigurator mazeConfigurator = (MazeConfigurator)eventPublisher;
-				mazeConfigurator.SpawnMazeEvent -= SpawnMaze;
+				mazeConfigurator.SpawnMazeEvent -= OnMazeSpawned;
 			}
 		}
 	}
@@ -70,16 +84,39 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 	#endregion
 
 	#region Functionality
-	private async void SpawnMaze(object eventPublisher, SpawnMazeEventArgs spawnMazeEventArgs)
+	private async void OnMazeSpawned(object eventPublisher, SpawnMazeEventArgs spawnMazeEventArgs)
 	{
-		MazeGenerationStarted?.Invoke(this, new EventArgs());
 		SetUpMazeSpawnPoint();
-		SpawnMazeWalls(spawnMazeEventArgs.MazeDimensions, mazeSpawnPoint.transform);
-		SpawnMazeGround(spawnMazeEventArgs.MazeDimensions, mazeSpawnPoint.transform);
-
-		DetermineCalculationAlgortihm(spawnMazeEventArgs.MazeSpawnAlgorithmType);
+		SetUpSpawnMethod(spawnMazeEventArgs.MazeSpawnAlgorithmType);
+		SpawnMaze(spawnMazeEventArgs);
 		List<Vector2Int> calculatedCellPositions = await CalculateMaze(spawnMazeEventArgs.MazeDimensions);
 		StartCoroutine(SpawnCells(calculatedCellPositions, mazeSpawnPoint.transform));
+	}
+
+	private void SetUpSpawnMethod(MazeSpawnAlgorithmType mazeSpawnAlgorithmType)
+	{
+		switch(mazeSpawnAlgorithmType)
+		{
+			case MazeSpawnAlgorithmType.BackTrackingRecursive:
+				SpawnMaze = SpawnBackTrackingRecursiveMaze;
+				break;
+			case MazeSpawnAlgorithmType.Kruskal:
+				SpawnMaze = SpawnKruskalMaze;
+				break;
+		}
+	}
+
+	private void SpawnBackTrackingRecursiveMaze(SpawnMazeEventArgs spawnMazeEventArgs)
+	{
+		CalculateMaze = MazeCalculatingAlgorithms.CalculateRecursiveBacktrackingMaze;
+		SpawnMazeWalls(spawnMazeEventArgs.MazeDimensions, mazeSpawnPoint.transform);
+		SpawnMazeGround(spawnMazeEventArgs.MazeDimensions, mazeSpawnPoint.transform);
+	}
+
+	private void SpawnKruskalMaze(SpawnMazeEventArgs spawnMazeEventArgs)
+	{
+		Debug.Log("Called");
+		CalculateMaze = MazeCalculatingAlgorithms.CalculateKruskalMaze;
 	}
 
 	private void SetUpMazeSpawnPoint()
@@ -103,20 +140,10 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 			cube.transform.SetParent(parent);
 			yield return new WaitForFixedUpdate();
 		}
-		MazeGenerationEnded?.Invoke(this, new EventArgs());
-	}
-
-	private void DetermineCalculationAlgortihm(MazeSpawnAlgorithmType mazeSpawnAlgorithmType)
-	{
-		switch(mazeSpawnAlgorithmType)
-		{
-			case MazeSpawnAlgorithmType.BackTrackingRecursive:
-				CalculateMaze = MazeCalculatingAlgorithms.CalculateRecursiveBacktrackingMaze;
-				break;
-			case MazeSpawnAlgorithmType.Kruskal:
-				CalculateMaze = MazeCalculatingAlgorithms.CalculateKruskalMaze;
-				break;
-		}
+		int highestWidthValue = cellPositions.OrderByDescending(positions => positions.x).ToList()[0].x;
+		int highestHeightValue = cellPositions.OrderByDescending(positions => positions.y).ToList()[0].y;
+		Vector2Int mazeDimensions = new Vector2Int(highestWidthValue, highestHeightValue);
+		MazeGenerationEnded?.Invoke(this, new MazeGenerationEventArgs(mazeDimensions));
 	}
 
 	private void SpawnMazeWalls(Vector2Int mazeDimensions, Transform parent)
