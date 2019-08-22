@@ -72,15 +72,14 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 	#region Functionality
 	private async void SpawnMaze(object eventPublisher, SpawnMazeEventArgs spawnMazeEventArgs)
 	{
-			MazeGenerationStarted?.Invoke(this, new EventArgs());
-			//SetUpMazeSpawnPoint
-			SetUpMazeSpawnPoint();
-			SpawnMazeWalls(spawnMazeEventArgs.MazeDimensions, mazeSpawnPoint.transform);
-			SpawnMazeGround(spawnMazeEventArgs.MazeDimensions, mazeSpawnPoint.transform);
+		MazeGenerationStarted?.Invoke(this, new EventArgs());
+		SetUpMazeSpawnPoint();
+		SpawnMazeWalls(spawnMazeEventArgs.MazeDimensions, mazeSpawnPoint.transform);
+		SpawnMazeGround(spawnMazeEventArgs.MazeDimensions, mazeSpawnPoint.transform);
 
-			DetermineCalculationAlgortihm(spawnMazeEventArgs.MazeSpawnAlgorithmType);
-			List<Vector2Int> calculatedCellPositions = await CalculateMaze(spawnMazeEventArgs.MazeDimensions);
-			StartCoroutine(SpawnCells(calculatedCellPositions, mazeSpawnPoint.transform));
+		DetermineCalculationAlgortihm(spawnMazeEventArgs.MazeSpawnAlgorithmType);
+		List<Vector2Int> calculatedCellPositions = await CalculateMaze(spawnMazeEventArgs.MazeDimensions);
+		StartCoroutine(SpawnCells(calculatedCellPositions, mazeSpawnPoint.transform));
 	}
 
 	private void SetUpMazeSpawnPoint()
@@ -100,7 +99,6 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 		{
 			GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
 			cube.transform.position = new Vector3(cellToSpawn.x, 0, cellToSpawn.y);
-			//Given a colour so that the white + white combo doesnt burn your eyes out.
 			cube.GetComponent<MeshRenderer>().material = Resources.Load(CELL_MATERIAL_Path) as Material;
 			cube.transform.SetParent(parent);
 			yield return new WaitForFixedUpdate();
@@ -114,6 +112,9 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 		{
 			case MazeSpawnAlgorithmType.BackTrackingRecursive:
 				CalculateMaze = MazeCalculatingAlgorithms.CalculateRecursiveBacktrackingMaze;
+				break;
+			case MazeSpawnAlgorithmType.Kruskal:
+				CalculateMaze = MazeCalculatingAlgorithms.CalculateKruskalMaze;
 				break;
 		}
 	}

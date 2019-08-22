@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 #region RecursiveBacktracking
-public static class Directions
+public static class RecursiveBacktrackingDirections
 {
 	//Basic 2D directions.
 	//Multiplying with 2 instead of 1 is because the wallcells themselves also take up a spot in the list.
@@ -55,25 +55,25 @@ public class RecursiveBacktrackingCalculationUnit
 	private void AddAvailableNeighbourDirection(int mazeWidth, int mazeHeight)
 	{
 		int i = 0;
-		foreach(KeyValuePair<string, Vector2> direction in Directions.directions)
+		foreach(KeyValuePair<string, Vector2> direction in RecursiveBacktrackingDirections.directions)
 		{
 			//Up
-			if(i == 1 && (BaseCell.Position.y == 0 || BaseCell.Position.y == 1))
+			if(i == 1 && BaseCell.Position.y == 0)
 			{
 				availableNeighbourDirections[i] = false;
 			}
 			//Down
-			else if(i == 0 && (BaseCell.Position.y == mazeHeight - 1 || BaseCell.Position.y == mazeHeight - 2))
+			else if(i == 0 && BaseCell.Position.y == mazeHeight - 1)
 			{
 				availableNeighbourDirections[i] = false;
 			}
 			//Left
-			else if(i == 2 && (BaseCell.Position.x == 0 || BaseCell.Position.x == 1))
+			else if(i == 2 && BaseCell.Position.x == 0)
 			{
 				availableNeighbourDirections[i] = false;
 			}
 			//Right
-			else if(i == 3 && (BaseCell.Position.x == mazeWidth - 1 || BaseCell.Position.x == mazeWidth - 2))
+			else if(i == 3 && BaseCell.Position.x == mazeWidth - 1)
 			{
 				availableNeighbourDirections[i] = false;
 			}
@@ -85,6 +85,7 @@ public class RecursiveBacktrackingCalculationUnit
 //Most algorithms exsist out of huge chuncks of code. Thats why I use "partial" to allow adding different algorthims through different scripts. Increasing readability while other classes can still access these algorithms through the same class. 
 public static partial class MazeCalculatingAlgorithms
 {
+	//using await Task.Delay to prevent algortihm freezing the whole programme when the calculation takes to long to process in a single frame.
 	public async static Task<List<Vector2Int>> CalculateRecursiveBacktrackingMaze(Vector2Int mazeDimensions)
 	{
 		List<RecursiveBacktrackingCalculationUnit> allUnits = new List<RecursiveBacktrackingCalculationUnit>();
@@ -136,7 +137,7 @@ public static partial class MazeCalculatingAlgorithms
 		{
 			if(cellToSpawn.isWall)
 			{
-				positions.Add(new Vector2Int((int)cellToSpawn.BaseCell.Position.x,(int)cellToSpawn.BaseCell.Position.y));
+				positions.Add(new Vector2Int((int)cellToSpawn.BaseCell.Position.x, (int)cellToSpawn.BaseCell.Position.y));
 			}
 		}
 		return positions;
@@ -149,24 +150,24 @@ public static partial class MazeCalculatingAlgorithms
 
 		for(int i = 0; i < limit; i++)
 		{
-			int x = i % width;
-			int y = i / width;
+			int cellWidth = i % width;
+			int cellHeight = i / width;
 			int oddOrEven = ((i / width) % 2 == 0) ? 0 : 1;
 
-			BaseCell baseCell = new BaseCell(new Vector2 (x,y));
+			BaseCell baseCell = new BaseCell(new Vector2 (cellWidth, cellHeight));
+			
 			RecursiveBacktrackingCalculationUnit unit = new RecursiveBacktrackingCalculationUnit(baseCell, width, height)
 			{
 				isVisited = false,
 				isWall = true
 			};
-			//Every unit on an odd numbered row is going be a wall at the start.
-			if(y % 2 == 1)
+			if(cellHeight % 2 == 1)
 			{
 				allUnitList.Add(unit);
 			}
-			//Every other unit on a even spot is going to be a path unit.
+			//Every unit on a even spot is going to be a path unit.
 			else if(i % 2 == oddOrEven)
-			{
+			{		
 				unit.isWall = false;
 				allUnitList.Add(unit);
 				pathUnitList.Add(unit);
@@ -184,7 +185,7 @@ public static partial class MazeCalculatingAlgorithms
 		List<RecursiveBacktrackingCalculationUnit> unvistedNeighbours = new List<RecursiveBacktrackingCalculationUnit>();
 		int i = 0;
 	
-		foreach(KeyValuePair<string, Vector2> direction in Directions.directions)
+		foreach(KeyValuePair<string, Vector2> direction in RecursiveBacktrackingDirections.directions)
 		{		
 			if(currentcell.AvailableNeighbourDirections[i])
 			{

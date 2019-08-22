@@ -51,7 +51,7 @@ public class CameraUpdater: MonoBehaviour, IEventHandler
 	private void UpdateCameraPosition(object sender, SpawnMazeEventArgs spawnMazeEventArgs)
 	{
 		Vector3 cameraFocusPoint = ToolMethods.CalculateTransformCenterpoint(new Vector3(spawnMazeEventArgs.MazeDimensions.x, mazeSpawnPoint.transform.position.y, spawnMazeEventArgs.MazeDimensions.y));
-		ToolMethods.CameraFocusOnGameObject(focusCamera, cameraFocusPoint, spawnMazeEventArgs.MazeDimensions);
+		ToolMethods.CameraFocusOnPosition(focusCamera, cameraFocusPoint, spawnMazeEventArgs.MazeDimensions);
 	}
 	#endregion
 }

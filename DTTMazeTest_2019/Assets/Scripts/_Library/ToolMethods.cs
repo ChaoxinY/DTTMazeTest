@@ -34,7 +34,7 @@ public static class ToolMethods
 		return centerPointPosition;
 	}
 
-	public static void CameraFocusOnGameObject(Camera camera, Vector3 focusPosition, Vector2 objectDimension)
+	public static void CameraFocusOnPosition(Camera camera, Vector3 focusPosition, Vector2 objectDimension)
 	{
 		float highestMeasureMentValue = objectDimension.x > objectDimension.y ? objectDimension.x : objectDimension.y;
 		camera.transform.position = new Vector3(focusPosition.x, focusPosition.y + highestMeasureMentValue + 5f, focusPosition.z);

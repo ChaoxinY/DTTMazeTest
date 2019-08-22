@@ -16,7 +16,8 @@ public class SpawnMazeEventArgs : EventArgs
 
 public enum MazeSpawnAlgorithmType
 {
-	BackTrackingRecursive = 0
+	BackTrackingRecursive = 0,
+	Kruskal = 1,
 }
 
 public class MazeConfigurator : MonoBehaviour, IEventPublisher, IEventHandler
@@ -89,11 +90,14 @@ public class MazeConfigurator : MonoBehaviour, IEventPublisher, IEventHandler
 	{
 		if(generationFinished)
 		{
-			SpawnMazeEvent?.Invoke(this, new SpawnMazeEventArgs(mazeDimensions, mazeSpawnAlgorithmType));
-			generationFinished = false;
+			if(mazeDimensions.x >0)
+			{
+				SpawnMazeEvent?.Invoke(this, new SpawnMazeEventArgs(mazeDimensions, mazeSpawnAlgorithmType));
+				generationFinished = false;
+			}	
 		}
 	}
-	//set maze value with methods here
+	//maze value setters for button functions 
 	public void SetMazeWidth()
 	{
 		int inputValue = ToolMethods.SetEvenNumberToOdd(ToolMethods.GetIntValueFromInputField(mazeWidthInputField));
