@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using System.Collections;
+using System;
 
 public class CameraUpdater: MonoBehaviour, IEventHandler
 {
@@ -23,20 +25,19 @@ public class CameraUpdater: MonoBehaviour, IEventHandler
 		if(publisherSubscribedEventArgs.Publisher.GetType() == typeof(MazeSpawner))
 		{
 			MazeSpawner mazeSpawner = (MazeSpawner)publisherSubscribedEventArgs.Publisher;
-			mazeSpawner.MazeGenerationEnded += UpdateCameraPosition;
+			mazeSpawner.MazeGenerationStarted += OnMazeGenerationStarted;
 		}
 	}
-
+	
 	public void UnSubScribeEvent()
 	{
 		StaticReferences.EventSubject.PublisherSubscribed -= SubscribeEvent;
-
 		foreach(IEventPublisher eventPublisher in StaticReferences.EventSubject.EventPublishers)
 		{
 			if(eventPublisher.GetType() == typeof(MazeSpawner))
 			{
 				MazeSpawner mazeSpawner = (MazeSpawner)eventPublisher;
-				mazeSpawner.MazeGenerationEnded -= UpdateCameraPosition;
+				mazeSpawner.MazeGenerationStarted -= OnMazeGenerationStarted;
 			}
 		}
 	}
@@ -48,10 +49,11 @@ public class CameraUpdater: MonoBehaviour, IEventHandler
 	#endregion
 
 	#region Functionality
-	private void UpdateCameraPosition(object sender, MazeGenerationEventArgs mazeGenerationEndedEventArgs)
+	private void OnMazeGenerationStarted(object sender, MazeGenerationEventArgs mazeGenerationEventArgs)
 	{
-		Vector3 cameraFocusPoint = ToolMethods.CalculateTransformCenterpoint(new Vector3(mazeGenerationEndedEventArgs.MazeDimensions.x, mazeSpawnPoint.transform.position.y, mazeGenerationEndedEventArgs.MazeDimensions.y));
-		ToolMethods.CameraFocusOnPosition(focusCamera, cameraFocusPoint, mazeGenerationEndedEventArgs.MazeDimensions);
+		Vector3 cameraFocusPoint = ToolMethods.CalculateTransformCenterpoint(new Vector3(mazeGenerationEventArgs.MazeDimensions.x, mazeSpawnPoint.transform.position.y, mazeGenerationEventArgs.MazeDimensions.y));
+		cameraFocusPoint = ToolMethods.CalculateFocusPosition(cameraFocusPoint, mazeGenerationEventArgs.MazeDimensions);
+		focusCamera.transform.position = cameraFocusPoint;
 	}
 	#endregion
 }

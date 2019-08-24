@@ -34,10 +34,13 @@ public static class ToolMethods
 		return centerPointPosition;
 	}
 
-	public static void CameraFocusOnPosition(Camera camera, Vector3 focusPosition, Vector2 objectDimension)
+	public static Vector3 CalculateFocusPosition(Vector3 focusPosition, Vector2 objectDimension)
 	{
+		Vector3 position = Vector3.zero;
 		float highestMeasureMentValue = objectDimension.x > objectDimension.y ? objectDimension.x : objectDimension.y;
-		camera.transform.position = new Vector3(focusPosition.x, focusPosition.y + highestMeasureMentValue + 5f, focusPosition.z);
+		position = new Vector3(focusPosition.x, focusPosition.y + highestMeasureMentValue + 5f, focusPosition.z);
+		return position;
 	}
+
 
 }

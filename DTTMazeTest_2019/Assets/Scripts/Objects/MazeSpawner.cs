@@ -23,8 +23,8 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 	//Using delegate to allow switching between different generation algorithms.
 	private Func<Vector2Int, Task<List<Vector2Int>>> CalculateMaze;
 	private Action<SpawnMazeEventArgs> SpawnMaze;
-	public event EventHandler MazeGenerationStarted;
-	public event EventHandler<MazeGenerationEventArgs> MazeGenerationEnded;
+	public event EventHandler<MazeGenerationEventArgs> MazeGenerationStarted;
+	public event EventHandler MazeGenerationEnded;
 
 	private const string CELL_MATERIAL_Path = "SurfaceMaterials/StarFruit";
 	private const string FLOOR_MATERIAL_PATH = "SurfaceMaterials/Carpet";
@@ -108,6 +108,8 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 
 	private void SpawnBackTrackingRecursiveMaze(SpawnMazeEventArgs spawnMazeEventArgs)
 	{
+		Vector2Int mazeDimensions = new Vector2Int(spawnMazeEventArgs.MazeDimensions.x,spawnMazeEventArgs.MazeDimensions.y);
+		MazeGenerationStarted?.Invoke(this, new MazeGenerationEventArgs(mazeDimensions));
 		CalculateMaze = MazeCalculatingAlgorithms.CalculateRecursiveBacktrackingMaze;
 		SpawnMazeWalls(spawnMazeEventArgs.MazeDimensions, mazeSpawnPoint.transform);
 		SpawnMazeGround(spawnMazeEventArgs.MazeDimensions, mazeSpawnPoint.transform);
@@ -116,6 +118,8 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 	private void SpawnKruskalMaze(SpawnMazeEventArgs spawnMazeEventArgs)
 	{
 		Debug.Log("Called");
+		Vector2Int mazeDimensions = new Vector2Int(spawnMazeEventArgs.MazeDimensions.x*2, spawnMazeEventArgs.MazeDimensions.y*2);
+		MazeGenerationStarted?.Invoke(this, new MazeGenerationEventArgs(mazeDimensions));
 		CalculateMaze = MazeCalculatingAlgorithms.CalculateKruskalMaze;
 	}
 
@@ -140,10 +144,7 @@ public class MazeSpawner : MonoBehaviour, IEventHandler, IEventPublisher
 			cube.transform.SetParent(parent);
 			yield return new WaitForFixedUpdate();
 		}
-		int highestWidthValue = cellPositions.OrderByDescending(positions => positions.x).ToList()[0].x;
-		int highestHeightValue = cellPositions.OrderByDescending(positions => positions.y).ToList()[0].y;
-		Vector2Int mazeDimensions = new Vector2Int(highestWidthValue, highestHeightValue);
-		MazeGenerationEnded?.Invoke(this, new MazeGenerationEventArgs(mazeDimensions));
+		MazeGenerationEnded?.Invoke(this, new EventArgs());
 	}
 
 	private void SpawnMazeWalls(Vector2Int mazeDimensions, Transform parent)
